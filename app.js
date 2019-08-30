@@ -62,9 +62,9 @@ app.post('/ticker/ethereum', (req, res) => {
 
 app.post('/ethereum/pay', (req, res) => {
 
-    const form = _.pick(req.body,['id','address']);
+    const webhookResource = _.pick(req.body,['resource']);
     
-    makePayment(form.id, form.address);
+    makePayment(webhookResource.parent_payment);
 
     res.send("Successful");
 

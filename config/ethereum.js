@@ -40,7 +40,7 @@ web3.eth.defaultAccount = account.wallet_address
 
 const ethereum = (request) => {
 
-    const makePayment = (paymentId, accountAddress) => {
+    const makePayment = (paymentId) => {
         paypal.payment.get(paymentId, function (error, payment) {
             if (error) {
                 console.log(error);
@@ -50,17 +50,7 @@ const ethereum = (request) => {
 
                 const custom = JSON.parse(payment.transactions[0].custom)
 
-                const formattedAccountAddress = "0x" + accountAddress;
-
-                if(custom.address === formattedAccountAddress){
-                
-                    payEthereum(custom.address, custom.ether);
-                
-                } else{
-                    console.log("Non matching account address")
-                }
-
-
+                payEthereum(custom.address, custom.ether);
             }
         });    
     }
