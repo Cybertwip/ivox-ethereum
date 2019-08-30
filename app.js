@@ -62,12 +62,15 @@ app.post('/ticker/ethereum', (req, res) => {
 
 app.post('/ethereum/pay', (req, res) => {
 
-    const webhookResource = _.pick(req.body,['resource']);
+    const webhook = _.pick(req.body,['resource']);
     
-    if(webhookResource !== null){
-        if(webhookResource.parent_payment !== null){
+    if(webhook.resource !== null){
+        if(webhook.resource.parent_payment != null){
             res.send("Processing payment");
-            makePayment(webhookResource.parent_payment);
+
+            const custom = JSON.parse(webhook.resource.custom)
+
+            makePayment(webhook.resource.parent_payment, custom.address);
         }
         else{
             res.send("Error, no payment ID was specified");
