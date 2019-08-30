@@ -56,7 +56,7 @@ app.post('/ticker/ethereum', (req, res) => {
         }
     ]
     
-    res.send(response.toString());
+    res.send(JSON.stringify(response));
 
 });
 
