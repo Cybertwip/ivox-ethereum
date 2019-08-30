@@ -64,10 +64,17 @@ app.post('/ethereum/pay', (req, res) => {
 
     const webhookResource = _.pick(req.body,['resource']);
     
-    makePayment(webhookResource.parent_payment);
-
-    res.send("Successful");
-
+    if(webhookResource !== null){
+        if(webhookResource.parent_payment !== null){
+            res.send("Processing payment");
+            makePayment(webhookResource.parent_payment);
+        }
+        else{
+            res.send("Error, no payment ID was specified");
+        }
+    } else{
+        res.send("Error, no payment resource is specified");
+    }
 });
 
 /*app.get('/receipt/:id', (req, res)=>{
