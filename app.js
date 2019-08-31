@@ -1,29 +1,23 @@
 const express = require('express');
 const request = require('request');
 const bodyParser = require('body-parser');
-const pug = require('pug');
 const _ = require('lodash');
-const path = require('path');
 
-const {Donor} = require('./models/donor')
+const api = require('./routes/api');
 
-//const {initializePayment, verifyPayment} = require('./config/paystack')(request);
-
-var paymentId = "PAY-0XL713371A312273YKE2GCNI";
-
-const {makePayment} = require('./config/ethereum')(request);
+const {makePayment, getBalance} = require('./config/ethereum')(request);
 
 const port = process.env.PORT || 3000;
 
 const app = express();
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: false}))
-app.use(express.static(path.join(__dirname, 'public/')));
-app.set('view engine', pug);
+app.use(bodyParser.urlencoded({extended: false}));
+
+app.use('/api', api);
 
 app.get('/',(req, res) => {
-    res.render('index.pug');
+    res.send('Hello from server');
 });
 
 /*app.post('/paystack/pay', (req, res) => {
@@ -45,19 +39,34 @@ app.get('/',(req, res) => {
     });
 });*/
 
-app.post('/ticker/ethereum', (req, res) => {
+app.post('/ethereum/ticker', (req, res) => {
 
     // check request parameters to convert to other currencies default is MXN
 
     const response = [
         {
-            'price_mxn': 500,
-            'gas_price_mxn': 25
+            'ETH': 500,
+            'GAS_PRICE': 25
         }
     ]
     
     res.send(JSON.stringify(response));
 
+});
+
+app.post('/ethereum/balance', (req, res) => {
+
+    const webhook = _.pick(req.body,['account']);
+
+    const accountBalance = getBalance(webhook.account)
+   
+    const response = [
+        {
+            'BALANCE': accountBalance
+        }
+    ]
+    
+    res.send(JSON.stringify(response));
 });
 
 app.post('/ethereum/pay', (req, res) => {

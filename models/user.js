@@ -1,6 +1,13 @@
-const {mongoose} = require('./../config/mongoose');
+const mongoose = require('mongoose');
 
-const donorSchema = new mongoose.Schema({
+const Schema = mongoose.Schema;
+
+const userSchema = new Schema({
+    email: String,
+    password: String
+})
+
+/*const donorSchema = new mongoose.Schema({
     full_name: {
         type: String, 
         required: true,
@@ -17,8 +24,6 @@ const donorSchema = new mongoose.Schema({
         type: String, 
         required: true
     }
-});
+});*/
 
-const Donor = mongoose.model('Donor', donorSchema);
-
-module.exports = {Donor}
+module.exports = mongoose.model('user', userSchema, 'users');

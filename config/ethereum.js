@@ -85,6 +85,11 @@ const ethereum = (request) => {
         return prices
     }
   
+    const getBalance = (destinationAccountAddress) =>{
+        let destinationBalanceWei = web3.eth.getBalance(destinationAccountAddress).toNumber()
+        let destinationBalance = web3.fromWei(destinationBalanceWei, 'ether')
+        return destinationBalance;
+    }
 
     const payEthereum = async (destinationAccountAddress, totalPaid) => {
 
@@ -203,7 +208,7 @@ const ethereum = (request) => {
         request(options, marketcap_callback)*/
     }
 
-    return {makePayment};
+    return {makePayment, getBalance};
 }
 
 module.exports = ethereum;
