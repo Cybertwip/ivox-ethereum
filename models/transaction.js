@@ -14,6 +14,7 @@ const transactionSchema = new Schema({
           try { 
             return JSON.parse(data);
           } catch(err) { 
+            console.log(err);
             return data;
           }
         },
