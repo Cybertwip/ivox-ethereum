@@ -2,6 +2,8 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
 const User = require('../models/user');
+const Currency = require('../models/currency');
+
 const mongoose = require('mongoose');
 
 const db = "mongodb+srv://admin:XtGrDmIS2tkTYwW5@ivox-qbcp4.mongodb.net/test?retryWrites=true&w=majority";
@@ -40,12 +42,204 @@ router.get('/', (req, res)=>{
     res.send('From API route');
 });
 
-router.get('/events', verifyToken, (req, res) =>{
-    let events = [
+router.get('/gas/get', (req, res) =>{
+    const response = [
+        {
+            type: 'low',
+            price: 25,
+            description: 'The slowest gas option'
+        }
+    ]
+    
+    res.send(JSON.stringify(response));
+});
 
-    ];
+router.post('/gas/set', verifyToken, (req, res) =>{
+    const response = [
+        {
+            type: 'low',
+            price: 25,
+            description: 'The slowest gas option'
+        }
+    ]
+    
+    res.send(JSON.stringify(response));
+});
 
-    res.json(events);
+router.get('/transaction/get', verifyToken, (req, res) =>{
+    
+    Transaction.find({}, function(error, transactions){
+        if(error){
+            console.log(error);
+            res.status(500).send({error: 'Server database error'});        
+        } else {
+            let transactionMap = [];
+
+            transactions.forEach(function(transaction){
+                transactionMap.push({   destination: transaction.destination, 
+                                        currency: transaction.currency,
+                                        amount: transaction.amount,
+                                        status: transaction.status,
+                                        description: transaction.description });
+            });
+
+            res.status(200).send(transactions);    
+        }
+    });
+
+
+
+});
+
+router.post('/currency/get', (req, res) =>{
+    let currencyFilter = req.body;
+
+    if(currencyFilter.tag === 'all'){
+        Currency.find({}, function(error, currencies){
+            if(error){
+                console.log(error);
+                res.status(500).send({error: 'Server database error'});        
+            } else {
+                let currencyMap = [];
+    
+                currencies.forEach(function(currency){
+                    currencyMap.push({  name: currency.name, 
+                                        rate: currency.rate });
+                });
+    
+                res.status(200).send(currencyMap);    
+            }
+        });
+    } else if(currencyFilter.tag) {
+        Currency.find({name: currencyFilter.tag}, function(error, currencies){
+            if(error){
+                console.log(error);
+                res.status(500).send({error: 'Server database error'});        
+            } else {
+                let currencyMap = [];
+    
+                currencies.forEach(function(currency){
+                    currencyMap.push({  name: currency.name, 
+                                        rate: currency.rate });
+                });
+    
+                res.status(200).send(currencyMap);    
+            }
+        });
+    } else {
+        res.status(400).send({error: 'No currency was specified'});        
+    }
+});
+
+router.post('/currency/add', verifyToken, (req, res) =>{
+    let currencyData = req.body;
+
+    Currency.findOne({name: currencyData.name }, function(err,obj) { 
+        if(!err){
+            if(!obj){
+                let currency = new Currency(currencyData);
+                currency.save((error, registeredCurrency)=>{
+                    if(error){
+                        console.log(error);
+                        res.status(500).send({error: 'Server database error'});        
+                    } else{
+                        Currency.find({}, function(error, currencies){
+                            if(error){
+                                console.log(error);
+                                res.status(500).send({error: 'Server database error'});        
+                            } else {
+                                let currencyMap = [];
+
+                                currencies.forEach(function(currency){
+                                    currencyMap.push({  name: currency.name, 
+                                                        rate: currency.rate });
+                                });
+    
+                                res.status(200).send(currencyMap);    
+                            }
+                        });
+                    }
+                });
+            } else {
+                res.status(400).send({error: 'Currency already exists'});        
+            }
+    
+        } else {
+            console.log(err);
+            res.status(500).send({error: 'Server database error'});        
+        }
+    });
+
+});
+
+router.post('/currency/edit', verifyToken, (req, res) =>{
+    let currencyData = req.body;
+
+    Currency.findOne({name: currencyData.name }, function(err,obj) { 
+        if(!err){
+            if(obj){
+                obj.name = currencyData.name;
+                obj.rate = currencyData.rate;
+
+                obj.save((error, registeredCurrency)=>{
+                    if(error){
+                        console.log(error);
+                        res.status(500).send({error: 'Server database error'});        
+                    } else{
+                        Currency.find({}, function(error, currencies){
+                            if(error){
+                                console.log(error);
+                                res.status(500).send({error: 'Server database error'});        
+                            } else {
+                                let currencyMap = [];
+
+                                currencies.forEach(function(currency){
+                                    currencyMap.push({  name: currency.name, 
+                                                        rate: currency.rate });
+                                });
+    
+                                res.status(200).send(currencyMap);    
+                            }
+                        });
+                    }
+                });
+            } else {
+                res.status(400).send({error: 'Currency does not exist'});        
+            }
+    
+        } else {
+            console.log(err);
+            res.status(500).send({error: 'Server database error'});        
+        }
+    });
+});
+
+router.post('/currency/delete', verifyToken, (req, res) =>{
+    let currencyData = req.body;
+
+    Currency.findOneAndDelete({name: currencyData.name }, function(err,obj) { 
+        if(!err){
+
+            Currency.find({}, function(error, currencies){
+                if(error){
+                    console.log(error);
+                    res.status(500).send({error: 'Server database error'});        
+                } else {
+                    let currencyMap = [];
+
+                    currencies.forEach(function(currency){
+                        currencyMap.push({  name: currency.name, 
+                                            rate: currency.rate });
+                    });
+
+                    res.status(200).send(currencyMap);    
+                }
+            });
+        } else {
+            console.log(err);
+            res.status(500).send({error: 'Server database error'});        
+        }
+    });
 });
 
 router.post('/register', (req, res) =>{
@@ -58,6 +252,7 @@ router.post('/register', (req, res) =>{
                 user.save((error, registeredUser)=>{
                     if(error){
                         console.log(error);
+                        res.status(500).send({error: 'Server database error'});        
                     } else{
                         let payload = { subject: registeredUser._id };
                         let token = jwt.sign(payload, 'secret');
@@ -65,18 +260,14 @@ router.post('/register', (req, res) =>{
                     }
                 });
             } else {
-                res.status(200).send({error: 'Email already exists'});        
+                res.status(400).send({error: 'Email already exists'});        
             }
     
         } else {
             console.log(err);
-            res.status(200).send({error: 'Server database error'});        
+            res.status(500).send({error: 'Server database error'});        
         }
     });
-
-
-   
-
 });
 
 router.post('/login', (req, res) =>{
@@ -85,6 +276,7 @@ router.post('/login', (req, res) =>{
     User.findOne({email: userData.email}, (error, user) =>{
         if(error){
             console.log(error);
+            res.status(500).send('Server database error');        
         } else{
             if(!user){
                 res.status(401).send('Invalid email');

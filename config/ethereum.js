@@ -11,32 +11,8 @@ const Web3 = require('web3')
 const axios = require('axios')
 const EthereumTx = require('ethereumjs-tx')
 const log = require('ololog').configure({ time: true })
-const ansi = require('ansicolor').nice
 
-const testmode = true
-
-/**
- * Network configuration
- */
-//const mainnet = `https://:${account.infura_project_secret}@mainnet.infura.io/v3/${account.infura_project_id}`
-//const testnet = `https://:${account.infura_project_secret}@ropsten.infura.io/v3/${account.infura_project_id}`
-
-const mainnet = `https://mainnet.infura.io/v3/${account.infura_project_id}`
-const testnet = `https://rinkeby.infura.io/v3/${account.infura_project_id}`
-
-
-/**
- * Change the provider that is passed to HttpProvider to `mainnet` for live transactions.
- */
-const networkToUse = testmode ? testnet : mainnet
-const web3 = new Web3( new Web3.providers.HttpProvider(networkToUse) )
-
-/**
- * Set the web3 default account to use as your public wallet address
- */
-web3.eth.defaultAccount = account.wallet_address
-
-
+const Transaction = require('../models/transaction');
 
 const ethereum = (request) => {
 
@@ -52,8 +28,23 @@ const ethereum = (request) => {
 
                 if(destinationAddress === custom.address){
 
-                    payEthereum(custom.address, custom.ether);
-                    
+                    Transaction.findOne({paypal: paymentId}, function(err, obj){
+                        if(!err){
+                            if(!obj){
+
+                                payEthereum(custom.address, 
+                                            custom.ether,
+                                            custom.network, 
+                                            custom.currency,
+                                            custom.amount,
+                                            paymentId);    
+
+                            } else { 
+                                console.log('Already paid');
+                            }
+                        }
+
+                    });
                 } else {
                     console.log("Non matching account detected");
                 }
@@ -85,13 +76,60 @@ const ethereum = (request) => {
         return prices
     }
   
-    const getBalance = (destinationAccountAddress) =>{
+    const getBalance = (destinationAccountAddress, network) =>{
+
+                
+        /**
+         * Network configuration
+         */
+
+        const mainnet = `https://mainnet.infura.io/v3/${account.infura_project_id}`
+        const testnet = `https://rinkeby.infura.io/v3/${account.infura_project_id}`
+
+
+        /**
+         * Change the provider that is passed to HttpProvider to `mainnet` for live transactions.
+         */
+        const networkToUse = network === 'rin' ? testnet : mainnet
+        const web3 = new Web3( new Web3.providers.HttpProvider(networkToUse) )
+
+        /**
+         * Set the web3 default account to use as your public wallet address
+         */
+        web3.eth.defaultAccount = account.wallet_address
+
         let destinationBalanceWei = web3.eth.getBalance(destinationAccountAddress).toNumber()
         let destinationBalance = web3.fromWei(destinationBalanceWei, 'ether')
         return destinationBalance;
     }
 
-    const payEthereum = async (destinationAccountAddress, totalPaid) => {
+    const payEthereum = async (destinationAccountAddress, 
+                                totalPaid, 
+                                network, 
+                                currency,
+                                paidInCurrency,
+                                paypalId) => {
+
+        const testmode = network === 'rin' ? true: false;
+
+        /**
+         * Network configuration
+         */
+
+        const mainnet = `https://mainnet.infura.io/v3/${account.infura_project_id}`
+        const testnet = `https://rinkeby.infura.io/v3/${account.infura_project_id}`
+
+
+        /**
+         * Change the provider that is passed to HttpProvider to `mainnet` for live transactions.
+         */
+        const networkToUse = network === 'rin' ? testnet : mainnet
+        const web3 = new Web3( new Web3.providers.HttpProvider(networkToUse) )
+
+        /**
+         * Set the web3 default account to use as your public wallet address
+         */
+        web3.eth.defaultAccount = account.wallet_address
 
         /**
          * Fetch the balance of the destination address
@@ -176,36 +214,37 @@ const ethereum = (request) => {
          * We now know the transaction ID, so let's build the public Etherscan url where
          * the transaction details can be viewed.
          */
-        const url = `https://rinkeby.etherscan.io/tx/${transactionId}`
+
+        const networkString = network ==='rin'? 'rinkeby' : 'mainnet';
+
+        const url = `https://${networkString}.etherscan.io/tx/${transactionId}`
+        
         log(url.cyan)
 
         log(`Note: please allow for 30 seconds before transaction appears on Etherscan`.magenta)
 
-        /*const options = {
-            url : 'https://api.coinmarketcap.com/v1/ticker/ethereum/?convert=MXN',
-            headers : {
-                'content-type': 'application/json',
-                'cache-control': 'no-cache'    
-            }
-        }*/
-/*
-        const marketcap_callback = async (error, response, body) => {
-            
+        let transactionData = {
+            paypal: paypalId,
+            id: transactionId,
+            network: networkString,
+            destination: destinationAccountAddress,
+            currency: currency,
+            amount: {
+                eth: totalPaid,
+                currency: paidInCurrency
+            },
+            status: 'Complete'
+        };
+
+        let transaction = new Transaction(transactionData);
+        
+        transaction.save((error, registeredTransaction)=>{
             if(error){
-                //handle errors
                 console.log(error);
-                return;
-            }
-    
-            var responseData = JSON.parse(body);
-
-            var responseJson = responseData[0];
-
-
-            
-        }
-
-        request(options, marketcap_callback)*/
+            } else {
+                console.log(registeredTransaction);
+            }            
+        });
     }
 
     return {makePayment, getBalance};

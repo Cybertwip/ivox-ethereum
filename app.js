@@ -6,7 +6,21 @@ const cors = require('cors')
 
 const api = require('./routes/api');
 
+const mongoose = require('mongoose');
+
+
+const db = "mongodb+srv://admin:XtGrDmIS2tkTYwW5@ivox-qbcp4.mongodb.net/test?retryWrites=true&w=majority";
+
+mongoose.connect(db, {dbName: 'general'}, err => {
+    if(err){
+        console.error('Error ' + err);
+    } else{
+        console.log('Connected to MongoDB Atlas');
+    }
+});
+
 const {makePayment, getBalance} = require('./config/ethereum')(request);
+
 
 const port = process.env.PORT || 3000;
 
@@ -41,26 +55,11 @@ app.get('/',(req, res) => {
     });
 });*/
 
-app.post('/ethereum/ticker', (req, res) => {
-
-    // check request parameters to convert to other currencies default is MXN
-
-    const response = [
-        {
-            'ETH': 500,
-            'GAS_PRICE': 25
-        }
-    ]
-    
-    res.send(JSON.stringify(response));
-
-});
-
 app.post('/ethereum/balance', (req, res) => {
 
-    const webhook = _.pick(req.body,['account']);
+    const balanceData = _.pick(req.body,['account', 'network']);
 
-    const accountBalance = getBalance(webhook.account)
+    const accountBalance = getBalance(balanceData.account, balanceData.network)
    
     const response = [
         {
@@ -82,11 +81,11 @@ app.post('/ethereum/pay', (req, res) => {
             const custom = JSON.parse(webhook.resource.custom)
 
             makePayment(webhook.resource.parent_payment, custom.address);
-        }
-        else{
+        
+        } else {
             res.send("Error, no payment ID was specified");
         }
-    } else{
+    } else {
         res.send("Error, no payment resource is specified");
     }
 });
@@ -103,10 +102,6 @@ app.post('/ethereum/pay', (req, res) => {
         res.redirect('/error')
     })
 })*/
-
-app.get('/error', (req, res)=>{
-    res.render('error.pug');
-})
 
 app.listen(port, () => {
     console.log(`App running on port ${port}`)
