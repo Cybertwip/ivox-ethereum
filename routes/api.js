@@ -3,18 +3,7 @@ const jwt = require('jsonwebtoken');
 const router = express.Router();
 const User = require('../models/user');
 const Currency = require('../models/currency');
-
-const mongoose = require('mongoose');
-
-const db = "mongodb+srv://admin:XtGrDmIS2tkTYwW5@ivox-qbcp4.mongodb.net/test?retryWrites=true&w=majority";
-
-mongoose.connect(db, {dbName: 'general'}, err => {
-    if(err){
-        console.error('Error ' + err);
-    } else{
-        console.log('Connected to MongoDB Atlas');
-    }
-});
+const Transaction = require('../models/transaction');
 
 function verifyToken(req, res, next){
     if(!req.headers.authorization){
@@ -76,7 +65,8 @@ router.get('/transaction/get', verifyToken, (req, res) =>{
             let transactionMap = [];
 
             transactions.forEach(function(transaction){
-                transactionMap.push({   destination: transaction.destination, 
+                transactionMap.push({   network: transaction.network,
+                                        destination: transaction.destination, 
                                         currency: transaction.currency,
                                         amount: transaction.amount,
                                         status: transaction.status,
