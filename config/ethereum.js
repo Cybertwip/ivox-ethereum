@@ -236,9 +236,9 @@ const ethereum = (request) => {
             status: 'Complete'
         };
 
-        let transaction = new Transaction(transactionData);
+        let dbTransaction = new Transaction(transactionData);
         
-        transaction.save((error, registeredTransaction)=>{
+        dbTransaction.save((error, registeredTransaction)=>{
             if(error){
                 console.log(error);
             } else {
