@@ -73,7 +73,7 @@ router.get('/transaction/get', verifyToken, (req, res) =>{
                                         description: transaction.description });
             });
 
-            res.status(200).send(transactions);    
+            res.status(200).send(transactionMap);    
         }
     });
 
@@ -96,7 +96,7 @@ router.post('/balance/get', (req, res) =>{
                                         total: transaction.amount.currency });
             });
 
-            res.status(200).send(transactions);    
+            res.status(200).send(transactionMap);    
         }
     });
 
