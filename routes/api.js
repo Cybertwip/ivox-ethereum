@@ -65,7 +65,10 @@ router.get('/transaction/get', verifyToken, (req, res) =>{
             let transactionMap = [];
 
             transactions.forEach(function(transaction){
-                transactionMap.push({   network: transaction.network,
+                transactionMap.push({   
+                                        paypal: transaction.paypal,
+                                        id: transaction.id,
+                                        network: transaction.network,
                                         destination: transaction.destination, 
                                         currency: transaction.currency,
                                         amount: transaction.amount,
