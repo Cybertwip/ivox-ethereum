@@ -77,7 +77,28 @@ router.get('/transaction/get', verifyToken, (req, res) =>{
         }
     });
 
+});
 
+router.post('/balance/get', (req, res) =>{
+    let balanceData = req.body;
+
+    Transaction.find({destination: balanceData.destination}, function(error, transactions){
+        if(error){
+            console.log(error);
+            res.status(500).send({error: 'Server database error'});        
+        } else {
+            let transactionMap = [];
+
+            transactions.forEach(function(transaction){
+                transactionMap.push({   paypal: transaction.paypal,
+                                        currency: transaction.currency,
+                                        eth: transaction.amount.eth,
+                                        total: transaction.amount.currency });
+            });
+
+            res.status(200).send(transactions);    
+        }
+    });
 
 });
 
