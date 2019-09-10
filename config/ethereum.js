@@ -173,7 +173,7 @@ const ethereum = (request) => {
         
         console.log(amountToSend);
 
-        var contract = new web3.eth.Contract(contractABI, contractAddress, { from: account.wallet_address });
+        var contract = web3.eth.contract(contractABI).at(contractAddress);
 
 
         /**
@@ -200,7 +200,7 @@ const ethereum = (request) => {
                 "gas": 21000,
                 "gasPrice": gasPrices.high * 1000000000, // converts the gwei price to wei
                 "nonce": nonce,
-                "data": contract.methods.transfer(destinationAccountAddress, amountToSend).encodeABI(),
+                "data": contract.transfer.getData(destinationAccountAddress, amountToSend, {from: account.wallet_address}),
                 "chainId": 1 // EIP 155 chainId - mainnet: 1, ropsten: 3, rinkeby: 4
             }
     
