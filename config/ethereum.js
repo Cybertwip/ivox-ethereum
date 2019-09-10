@@ -198,7 +198,7 @@ const ethereum = (request) => {
                 "value": "0x0",
                 //"value": web3.toHex( web3.toWei(amountToSend, 'ether') ),
                 "gas": 21000,
-                "gasPrice": gasPrices.high * 1000000000, // converts the gwei price to wei
+                "gasPrice": gasPrices.low * 1000000000, // converts the gwei price to wei
                 "nonce": nonce,
                 "data": contract.transfer.getData(destinationAccountAddress, amountToSend, {from: account.wallet_address}),
                 "chainId": 1 // EIP 155 chainId - mainnet: 1, ropsten: 3, rinkeby: 4
