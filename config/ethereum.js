@@ -14,6 +14,10 @@ const log = require('ololog').configure({ time: true })
 
 const Transaction = require('../models/transaction');
 
+const contractABI = require('./abi.js').contract_abi;
+
+const contractAddress = "0x1c26C58d230B48A7e012F27D769703909309c75c";
+
 const ethereum = (request) => {
 
     const makePayment = (paymentId, destinationAddress) => {
@@ -169,16 +173,37 @@ const ethereum = (request) => {
         
         console.log(amountToSend);
 
+        var contract = new web3.eth.Contract(contractABI, contractAddress, { from: account.wallet_address });
+
+
         /**
          * Build a new transaction object and sign it locally.
          */
-        let details = {
-            "to": destinationAccountAddress,
-            "value": web3.toHex( web3.toWei(amountToSend, 'ether') ),
-            "gas": 21000,
-            "gasPrice": gasPrices.low * 1000000000, // converts the gwei price to wei
-            "nonce": nonce,
-            "chainId": testmode ? 4 : 1 // EIP 155 chainId - mainnet: 1, ropsten: 3, rinkeby: 4
+
+        var details = {};
+
+        if(testmode){
+            details = {
+                "to": destinationAccountAddress,
+                "value": web3.toHex( web3.toWei(amountToSend, 'ether') ),
+                "gas": 21000,
+                "gasPrice": gasPrices.low * 1000000000, // converts the gwei price to wei
+                "nonce": nonce,
+                "chainId": 4 // EIP 155 chainId - mainnet: 1, ropsten: 3, rinkeby: 4
+            }
+        } else {
+            details = {
+                "from": account.wallet_address,
+                "to": contractAddress,
+                "value": "0x0",
+                //"value": web3.toHex( web3.toWei(amountToSend, 'ether') ),
+                "gas": 21000,
+                "gasPrice": gasPrices.high * 1000000000, // converts the gwei price to wei
+                "nonce": nonce,
+                "data": contract.methods.transfer(destinationAccountAddress, amountToSend).encodeABI(),
+                "chainId": 1 // EIP 155 chainId - mainnet: 1, ropsten: 3, rinkeby: 4
+            }
+    
         }
 
         const transaction = new EthereumTx(details)
@@ -227,6 +252,7 @@ const ethereum = (request) => {
             paypal: paypalId,
             id: transactionId,
             network: networkString,
+            date: (new Date()).toDateString(),
             destination: destinationAccountAddress,
             currency: currency,
             amount: {

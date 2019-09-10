@@ -8,6 +8,7 @@ const transactionSchema = new Schema({
     network: String,
     destination: String,
     currency: String,
+    date: String,
     amount: {
         type: String,
         get: function(data) {
